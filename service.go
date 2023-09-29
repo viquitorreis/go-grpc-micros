@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 )
 
 // PriceFetcher é uma interface que pode buscar um preço
@@ -24,9 +25,13 @@ var priceMocks = map[string]float64{
 }
 
 func MockPriceTicker(ctx context.Context, ticker string) (float64, error) {
+	// mimificando o roundtrip
+	time.Sleep(100 * time.Millisecond)
+	fmt.Println(ticker)
+
 	price, ok := priceMocks[ticker]
 	if !ok {
-		return price, fmt.Errorf("O ticker dado (%s) não é suportado")
+		return price, fmt.Errorf("O ticker dado %s não é suportado", ticker)
 	}
 
 	return price, nil
