@@ -1,24 +1,45 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
+	"log"
+	"time"
+
+	"gitlab.com/victorreisprog/go-grpc-micros/client"
+	"gitlab.com/victorreisprog/go-grpc-micros/proto"
 )
 
 func main() {
-	// client := client.New("http://localhost:4000")
-
-	// price, err := client.FetchPrice(context.Background(), "ET")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// fmt.Printf("%+v\n", price)
-	listenAddr := flag.String("listenaddr", ":3030", "server está rodando na porta 3030")
+	var (
+		jsonAddr = flag.String("json", ":3030", "server transporter JSON está rodando na porta 3030")
+		grpcAddr = flag.String("grpc", ":4040", "server transporter GRPC está rodando na porta 4040")
+		svc      = NewLoggingService(NewMetricService(&priceService{}))
+		ctx      = context.Background()
+	)
 	flag.Parse()
 
-	svc := NewLoggingService(NewMetricService(&priceFetcher{}))
+	grpcClient, err := client.NewGRPCClient(":4040")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	server := NewJSONApiServer(*listenAddr, svc)
-	server.Run()
+	go func() {
+		for {
+			time.Sleep(3 * time.Second)
+			resp, err := grpcClient.FetchPrice(ctx, &proto.PriceRequest{Ticker: "BTC"})
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Printf("%+v\n", resp)
+		}
+	}()
+
+	go makeGRPCServerAndRun(*grpcAddr, svc)
+
+	jsonServer := NewJSONApiServer(*jsonAddr, svc)
+	jsonServer.Run()
 
 }

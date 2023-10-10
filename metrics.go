@@ -5,10 +5,10 @@ import (
 )
 
 type metricsService struct {
-	next PriceFetcher
+	next PriceService
 }
 
-func NewMetricService(next PriceFetcher) PriceFetcher {
+func NewMetricService(next PriceService) PriceService {
 	return &metricsService{
 		next: next,
 	}

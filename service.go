@@ -3,20 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 )
-
-// PriceFetcher é uma interface que pode buscar um preço
-type PriceFetcher interface {
-	FetchPrice(context.Context, string) (float64, error)
-}
-
-// priceFetcher está implementando a **interface** PriceFetcher através da função FetchPrice
-type priceFetcher struct{}
-
-func (s *priceFetcher) FetchPrice(ctx context.Context, ticker string) (float64, error) {
-	return MockPriceTicker(ctx, ticker)
-}
 
 var priceMocks = map[string]float64{
 	"BTC": 20_000.0,
@@ -24,14 +11,23 @@ var priceMocks = map[string]float64{
 	"VRS": 200.0,
 }
 
-func MockPriceTicker(ctx context.Context, ticker string) (float64, error) {
-	// mimificando o roundtrip
-	time.Sleep(100 * time.Millisecond)
-	fmt.Println(ticker)
+// PriceFetcher é uma interface que pode buscar um preço
+type PriceService interface {
+	FetchPrice(context.Context, string) (float64, error)
+}
 
+// priceFetcher está implementando a **interface** PriceFetcher através da função FetchPrice
+type priceService struct{}
+
+func (s *priceService) FetchPrice(ctx context.Context, ticker string) (float64, error) {
+	return MockPriceTicker(ctx, ticker)
+}
+
+func MockPriceTicker(_ context.Context, ticker string) (float64, error) {
+	// resp := http.Get("link api para fazer fetch do preço")	 get request de uma api
 	price, ok := priceMocks[ticker]
 	if !ok {
-		return price, fmt.Errorf("O ticker dado %s não é suportado", ticker)
+		return 0.0, fmt.Errorf("O ticker dado %s não é suportado", ticker)
 	}
 
 	return price, nil
